@@ -1,122 +1,363 @@
-# web-programming-2026-template
+# CourseHub
 
-A reusable Django project with no bundled application, SQLite, and Django's
-standard admin, authentication, sessions, messages, and staticfiles support.
+## Ідея
 
-## Local setup
+Платформа для зручного вибору та запису на вибіркові університетські дисципліни. 
+Студент часто обирає дисципліни вільного вибору навмання: інформація розкидана
+по різних сторінках, незрозуміло, скільки залишилось місць, і ніхто не знає,
+що думають про курс ті, хто його вже проходив.
 
-Requires the latest patch release of Python 3.12, 3.13, or 3.14. Run these commands from the project directory containing
-`manage.py`.
+**CourseHub** збирає це в одному місці:
 
-1. Create and activate a virtual environment:
+- каталог курсів з пошуком за назвою й ключовими словами;
+- фільтри за факультетом, викладачем, семестром і мовою викладання;
+- сортування за кількістю кредитів ECTS, рейтингом серед студентів і кількістю вільних місць;
+- сторінки викладачів і факультетів, де видно їхні курси;
+- відгуки та оцінки студентів, з яких складається рейтинг курсу;
+- запис на курс і скасування запису;
+- профіль студента з історією його записів.
 
-   ```bash
-   python -m venv .venv
-   
-   # for linux/macos
-   source .venv/bin/activate
-   # for Windows:
-   .venv\Scripts\activate
-   ```
+---
 
-2. Install dependencies:
+## Ендпоінти
+Усі дані передаються у форматі JSON.
 
-   ```bash
-   python -m pip install -r requirements-dev.txt
-   ```
+*позначка 🔒 означає, що потрібен авторизований користувач*
 
+### Авторизація
 
-3. Apply migrations to create the local SQLite database:
+| Метод | URL | Призначення |
+|---|---|---|
+| POST | `/api/auth/register/` | Реєстрація |
+| POST | `/api/auth/login/` | Вхід |
+| POST | `/api/auth/logout/` 🔒 | Вихід |
 
-   ```bash
-   python manage.py migrate
-   ```
+#### `POST /api/auth/register/`
 
-4. Start the development server:
+Request body:
 
-   ```bash
-   python manage.py runserver
-   ```
-
-## Endpoints
-
-With the server running at `http://127.0.0.1:8000`:
-
-| URL | Behavior |
-| --- | --- |
-| http://127.0.0.1:8000/ | No application homepage; may show Django's development welcome page while `DEBUG = True` |
-| http://127.0.0.1:8000/admin/ | Django admin, available after applying migrations |
-
-With `DEBUG = False`, unmatched URLs such as `/` return HTTP 404.
-
-To create an account for admin login, run this after applying migrations:
-
-```bash
-python manage.py createsuperuser
+```json
+{
+  "email": "student@ukma.edu.ua",
+  "password": "secret123",
+  "first_name": "Олена",
+  "last_name": "Коваль"
+}
 ```
 
-## Add your first application
+Response `201`:
 
-1. Create an app from the directory containing `manage.py` (replace `myapp`
-   with your application name):
-
-   ```bash
-   python manage.py startapp myapp
-   ```
-
-2. Add its generated configuration class, `myapp.apps.MyappConfig`, to
-   `INSTALLED_APPS` in `config/settings.py`.
-3. Define your views and create `myapp/urls.py` with their URL patterns.
-4. Register that URLconf in `config/urls.py` using `path()` and `include()`,
-   choosing a URL prefix for the app and retaining the admin route.
-
-See the official Django 6.1 tutorial for
-[views and URL registration](https://docs.djangoproject.com/en/6.1/intro/tutorial01/)
-and [app registration and models](https://docs.djangoproject.com/en/6.1/intro/tutorial02/).
-
-## Start a REST API
-
-Django REST framework and `django-cors-headers` are included and configured.
-Install the project dependencies with `python -m pip install -r requirements-dev.txt`.
-Create your own app, serializers, views, and URL patterns; no API app or
-authentication scheme is supplied.
-
-## Git attributes
-
-Git detects text files automatically and normalizes them to LF. Checkouts use
-LF on Linux and Windows, while `.bat` and `.cmd` files use CRLF. Binary files
-are auto-detected and left unchanged, helping avoid newline-only diffs.
-
-
-## Code style and submission verification
-
-All submissions are required to adhere to PEP-8, Django best practices, and standard HTML/CSS/JS formatting. A deterministic cross-platform utility is provided to help you check and format your code.
-
-### 1. Verification (Check Mode)
-Before submitting, verify that all files adhere to the required standards:
-
-```bash
-python check_submission.py
+```json
+{ "id": 7, 
+   "email": "student@ukma.edu.ua", 
+   "first_name": "Олена", 
+   "last_name": "Коваль" 
+}
 ```
 
-Passing these checks confirms code style, not functional API behavior. Before submitting an API, also write and run functional tests for its endpoints. If style checks fail, review the error output or run the auto-formatter below.
+Помилки: `400`, якщо email уже зайнятий або пароль занадто простий.
 
-### 2. Auto-Formatting
-To automatically format Python files, fix safe PEP-8 rules, format Django HTML templates, and format CSS/JS static files:
+#### `POST /api/auth/login/`
 
-```bash
-python check_submission.py --format
+Request body: `{ "email": "...", "password": "..." }`
+
+Response `200`: `{ "token": "..." }`
+Помилка: `401` при неправильних даних.
+
+#### `POST /api/auth/logout/` 🔒
+
+Response `204`, без тіла.
+Помилка: `401` без авторизації.
+
+---
+
+### Профіль
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/users/me/` 🔒 | Мій профіль |
+| PATCH | `/api/users/me/` 🔒 | Редагувати мої дані |
+| GET | `/api/users/me/enrollments/` 🔒 | Історія моїх записів на курси |
+
+#### `GET /api/users/me/`
+
+Response `200`:
+
+```json
+{ "id": 7, "email": "student@ukma.edu.ua", "first_name": "Олена", "last_name": "Коваль", "faculty": "ФСНСТ" }
 ```
 
-### 3. PyCharm Integration
-If you use PyCharm:
-- **One-Click Run:** In the top-right toolbar run configurations dropdown, select **"Verify Submission"** or **"Format Project"** and click the green **Play** button.
+#### `PATCH /api/users/me/`
 
-## Development only
+Request body (будь-які з полів): `{ "first_name": "Олена", "last_name": "Коваль", "faculty": "ФСНСТ" }`
+Response `200`: оновлений профіль. 
+Помилка: `400`.
 
-The included settings use `DEBUG = True`, a development secret key, and a local
-SQLite database. The default mailer uses the console backend: email is printed
-to the process's console instead of being delivered.
+#### `GET /api/users/me/enrollments/`
 
-This configuration and Django's development server are not suitable for
-production deployment.
+Response `200`:
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 15,
+      "course": { "id": 3, "title": "Вступ до політичної аналітики" },
+      "enrolled_at": "2026-10-10 14:30:00"
+    }
+  ]
+}
+```
+
+---
+
+### Курси
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/courses/` | Список курсів з пошуком, фільтрами, сортуванням |
+| POST | `/api/courses/` 🔒 | Додати курс |
+| GET | `/api/courses/{id}/` | Сторінка курсу |
+| PATCH | `/api/courses/{id}/` 🔒 | Редагувати курс |
+| DELETE | `/api/courses/{id}/` 🔒 | Видалити курс |
+
+#### `GET /api/courses/`
+
+Параметри (усі необов'язкові):
+
+| Параметр | Приклад | Значення |
+|---|---|---|
+| `search` | `?search=політика` | пошук за назвою та ключовими словами |
+| `faculty` | `?faculty=2` | id факультету |
+| `teacher` | `?teacher=5` | id викладача |
+| `semester` | `?semester=autumn` | `autumn` або `spring` |
+| `language` | `?language=en` | мова викладання |
+| `ordering` | `?ordering=-rating` | сортування: `ects_credits`, `rating`, `free_places`; мінус означає за спаданням |
+| `page`, `page_size` | `?page=2` | пагінація |
+
+Response `200`:
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 3,
+      "title": "Вступ до політичної аналітики",
+      "ects_credits": 4,
+      "semester": "autumn",
+      "language": "uk",
+      "faculty": { "id": 2, "name": "ФСНСТ" },
+      "teachers": [{ "id": 5, "full_name": "Яковлєв Максим Володимирович" }],
+      "rating": 4.6,
+      "free_places": 8
+    }
+  ]
+}
+```
+
+#### `POST /api/courses/` 🔒
+
+Request body:
+
+```json
+{
+  "title": "Вступ до політичної аналітики",
+  "description": "Базові методи аналізу політичних подій.",
+  "keywords": "політика, аналітика, дані",
+  "ects_credits": 4,
+  "semester": "autumn",
+  "language": "uk",
+  "capacity": 25,
+  "faculty_id": 2,
+  "teacher_ids": [5]
+}
+```
+
+Response `201`: створений курс (формат як у деталях). Помилка: `400`, `403`.
+
+#### `GET /api/courses/{id}/`
+
+Response `200`:
+
+```json
+{
+  "id": 3,
+  "title": "Вступ до політичної аналітики",
+  "description": "Базові методи аналізу політичних подій.",
+  "keywords": "політика, аналітика, дані",
+  "ects_credits": 4,
+  "semester": "autumn",
+  "language": "uk",
+  "capacity": 25,
+  "free_places": 8,
+  "rating": 4.6,
+  "reviews_count": 12,
+  "faculty": { "id": 2, "name": "ФСНСТ" },
+  "teachers": [{ "id": 5, "full_name": "Яковлєв Максим Володимирович" }]
+}
+```
+
+Помилка: `404`.
+
+#### `PATCH /api/courses/{id}/` 🔒
+
+Request body: будь-які поля з `POST`. 
+Response `200`: оновлений курс. 
+Помилки: `400`, `403`, `404`.
+
+#### `DELETE /api/courses/{id}/` 🔒
+
+Response `204`. 
+Помилки: `403`, `404`.
+
+---
+
+### Відгуки на курси
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/courses/{id}/reviews/` | Відгуки на курс |
+| POST | `/api/courses/{id}/reviews/` 🔒 | Залишити відгук |
+| PATCH | `/api/reviews/{id}/` 🔒 | Змінити свій відгук |
+| DELETE | `/api/reviews/{id}/` 🔒 | Видалити свій відгук |
+
+#### `GET /api/courses/{id}/reviews/`
+
+Response `200`:
+
+```json
+[
+  { "id": 9, "author": "Олена К.", "rating": 5, "comment": "Дуже корисний курс", "created_at": "2026-09-20 10:00:00" }
+]
+```
+
+#### `POST /api/courses/{id}/reviews/` 🔒
+
+Request body: `{ "rating": 5, "comment": "Дуже корисний курс" }` (`rating` від 1 до 5).
+Response `201`: створений відгук.
+Помилки: `400` (оцінка поза діапазоном).
+
+#### `PATCH /api/reviews/{id}/` 🔒
+
+Request body: `{ "rating": 4, "comment": "..." }`. 
+Response `200`. 
+Помилки: `403` (не мій відгук), `404`.
+
+#### `DELETE /api/reviews/{id}/` 🔒
+
+Response `204`. 
+Помилки: `403`, `404`.
+
+---
+
+### Викладачі
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/teachers/` | Список викладачів (`?search=`, `?faculty=`) |
+| POST | `/api/teachers/` 🔒 | Додати викладача |
+| GET | `/api/teachers/{id}/` | Сторінка викладача |
+| PATCH | `/api/teachers/{id}/` 🔒 | Редагувати викладача |
+| DELETE | `/api/teachers/{id}/` 🔒 | Видалити викладача |
+| GET | `/api/teachers/{id}/courses/` | Усі курси викладача |
+
+Request body (`POST`, `PATCH`):
+
+```json
+{ "full_name": "Яковлєв Максим Володимирович", "position": "доцент", "degree": "кандидат політичних наук", "faculty_id": 2 }
+```
+
+Response (`GET` деталі, `POST` `201`, `PATCH` `200`):
+
+```json
+{ 
+   "id": 5, 
+   "full_name": "Яковлєв Максим Володимирович", 
+   "position": "доцент", 
+   "degree": "кандидат політичних наук", 
+   "faculty": { "id": 2, "name": "ФСНСТ" } 
+}
+```
+
+`GET /api/teachers/{id}/courses/` повертає список курсів у тому ж форматі, що й `GET /api/courses/`.
+`DELETE` повертає `204`. 
+Помилки: `400`, `403`, `404`.
+
+---
+
+### Факультети
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/faculties/` | Список факультетів |
+| POST | `/api/faculties/` 🔒 | Додати факультет |
+| GET | `/api/faculties/{id}/` | Сторінка факультету |
+| PATCH | `/api/faculties/{id}/` 🔒 | Редагувати факультет |
+| DELETE | `/api/faculties/{id}/` 🔒 | Видалити факультет |
+| GET | `/api/faculties/{id}/courses/` | Усі курси факультету |
+
+Request body (`POST`, `PATCH`): 
+`{ "name": "ФСНСТ", "description": "Факультет соціальних наук та соціальних технологій" }`
+
+Response (`GET` деталі, `POST` `201`, `PATCH` `200`): 
+`{ "id": 2, "name": "ФСНСТ", "description": "..." }`
+
+`GET /api/faculties/{id}/courses/` повертає список курсів у форматі `GET /api/courses/`.
+`DELETE` повертає `204`. 
+Помилки: `400`, `403`, `404`.
+
+---
+
+### Записи на курси
+
+| Метод | URL | Призначення |
+|---|---|---|
+| POST | `/api/enrollments/` 🔒 | Записатися на курс |
+| DELETE | `/api/enrollments/{id}/` 🔒 | Скасувати свій запис |
+
+#### `POST /api/enrollments/` 🔒
+
+Request body: `{ "course_id": 3 }`
+
+Response `201`:
+
+```json
+{ "id": 15, "course_id": 3, "enrolled_at": "2026-10-10 14:30:00" }
+```
+
+Помилки:
+- `404`, якщо курсу не існує;
+- `409`, якщо вільних місць немає або користувач уже записаний на цей курс.
+
+#### `DELETE /api/enrollments/{id}/` 🔒
+
+Response `204`. Помилки: `403`, `404`.
+
+---
+
+### Про нас
+
+| Метод | URL | Призначення |
+|---|---|---|
+| GET | `/api/about/` | Контакти та правила запису |
+
+Response `200`:
+
+```json
+{
+  "contacts": "Деканат ФСНСТ, корпус 6, кабінет 213, тел. (044) 463 58 63",
+  "enrollment_rules": "Запис на курси відкритий до початку семестру. Скасувати запис можна до його старту."
+}
+```
+
+---
+
+## Схема бази даних
+
+![Схема БД](db-schema.png)
