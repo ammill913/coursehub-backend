@@ -1,0 +1,652 @@
+{
+  "info": {
+    "_postman_id": "c0a80101-0000-4000-8000-c0a801010002",
+    "name": "CourseHub API",
+    "description": "Колекція для CourseHub API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Faculties",
+      "description": "CRUD для факультетів (без видалення — видалення тестуємо в папці 04).",
+      "item": [
+        {
+          "name": "List faculties (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculties/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create faculty (POST 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(data).to.have.property('id'));",
+                  "pm.collectionVariables.set('faculty_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Факультет інформатики\",\n    \"description\": \"Вивчення комп'ютерних наук\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculties/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get faculty by id (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculties/{{faculty_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", "{{faculty_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update faculty (PUT 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Факультет інформатики (оновлено)\",\n    \"description\": \"Оновлений опис факультету\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculties/{{faculty_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", "{{faculty_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create faculty with empty name (POST 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has error field', () => pm.expect(data).to.have.property('error'));",
+                  "pm.test('Has details.name', () => pm.expect(data.details).to.have.property('name'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"\",\n    \"description\": \"Порожня назва — має спрацювати валідатор\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculties/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get non-existent faculty (GET 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Has error field', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculties/999999/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", "999999", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Teachers",
+      "description": "CRUD для викладачів (без видалення — видалення тестуємо в папці 04).",
+      "item": [
+        {
+          "name": "List teachers (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create teacher (POST 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(data).to.have.property('id'));",
+                  "pm.collectionVariables.set('teacher_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"first_name\": \"Іван\",\n    \"last_name\": \"Шевченко\",\n    \"position\": \"professor\",\n    \"email\": \"shevchenko@ukma.edu.ua\",\n    \"faculty\": {{faculty_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get teacher by id (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update teacher (PUT 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Position updated', () => pm.expect(pm.response.json().position).to.eql('associate_professor'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"first_name\": \"Іван\",\n    \"last_name\": \"Шевченко\",\n    \"position\": \"associate_professor\",\n    \"email\": \"shevchenko@ukma.edu.ua\",\n    \"faculty\": {{faculty_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create teacher with invalid data (POST 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has error field', () => pm.expect(data).to.have.property('error'));",
+                  "pm.test('Has details field', () => pm.expect(data).to.have.property('details'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"first_name\": \"Петро\",\n    \"last_name\": \"Петренко\",\n    \"position\": \"invalid_role\",\n    \"email\": \"not-an-email\",\n    \"faculty\": {{faculty_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get non-existent teacher (GET 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/999999/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "999999", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Courses",
+      "description": "CRUD для курсів. Валідатор: `credits` має бути кратним 0.5.",
+      "item": [
+        {
+          "name": "List courses (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create course (POST 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(data).to.have.property('id'));",
+                  "pm.collectionVariables.set('course_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Алгоритми і структури даних\",\n    \"description\": \"Базовий курс\",\n    \"credits\": 5.5,\n    \"faculty\": {{faculty_id}},\n    \"teacher\": {{teacher_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create course with invalid credits (POST 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const data = pm.response.json();",
+                  "pm.test('Has error field', () => pm.expect(data).to.have.property('error'));",
+                  "pm.test('Has credits details', () => pm.expect(data.details).to.have.property('credits'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Дискретна математика\",\n    \"description\": \"\",\n    \"credits\": 4.3,\n    \"faculty\": {{faculty_id}},\n    \"teacher\": {{teacher_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get course by id (GET 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/{{course_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", "{{course_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update course (PUT 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Алгоритми і структури даних (v2)\",\n    \"description\": \"Оновлений опис\",\n    \"credits\": 6.0,\n    \"faculty\": {{faculty_id}},\n    \"teacher\": {{teacher_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/{{course_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", "{{course_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get non-existent course (GET 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/999999/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", "999999", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Business logic & cleanup",
+      "description": "Тести бізнес-логіки 409 (ProtectedError) та прибирання тестових даних.\n\n⚠️ Виконуй цю папку ПІСЛЯ папок 01–03, коли faculty, teacher і course вже створені й пов'язані між собою.",
+      "item": [
+        {
+          "name": "Delete teacher with courses (DELETE 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Has error field', () => pm.expect(pm.response.json()).to.have.property('error'));",
+                  "pm.test('Mentions courses', () => pm.expect(pm.response.json().error.toLowerCase()).to.include('курс'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete faculty with dependencies (DELETE 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Has error field', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculties/{{faculty_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", "{{faculty_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete course (DELETE 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/{{course_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", "{{course_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete teacher (DELETE 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete faculty (DELETE 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculties/{{faculty_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "faculties", "{{faculty_id}}", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "faculty_id", "value": "1" },
+    { "key": "teacher_id", "value": "1" },
+    { "key": "course_id", "value": "1" }
+  ]
+}
