@@ -1,5 +1,6 @@
 from django.db.models import ProtectedError
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -7,7 +8,19 @@ from .models import Course, Faculty, Teacher
 from .serializers import CourseSerializer, FacultySerializer, TeacherSerializer
 
 
+class CatalogDetailView(APIView):
+    def get_permissions(self):
+        if self.request.method in ["DELETE", "PUT", "PATCH"]:
+            return [IsAdminUser()]
+        return [IsAuthenticatedOrReadOnly()]
+
+
 class FacultyListView(APIView):
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAdminUser()]
+        return [IsAuthenticatedOrReadOnly()]
+
     def get(self, request):
         faculties = Faculty.objects.all()
         serializer = FacultySerializer(faculties, many=True)
@@ -24,7 +37,7 @@ class FacultyListView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class FacultyDetailView(APIView):
+class FacultyDetailView(CatalogDetailView):
     def get_object(self, pk):
         try:
             return Faculty.objects.get(pk=pk)
@@ -83,6 +96,11 @@ class FacultyDetailView(APIView):
 
 
 class TeacherListView(APIView):
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAdminUser()]
+        return [IsAuthenticatedOrReadOnly()]
+
     def get(self, request):
         teachers = Teacher.objects.all()
         serializer = TeacherSerializer(teachers, many=True)
@@ -100,7 +118,7 @@ class TeacherListView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class TeacherDetailView(APIView):
+class TeacherDetailView(CatalogDetailView):
     def get_object(self, pk):
         try:
             return Teacher.objects.get(pk=pk)
@@ -159,6 +177,11 @@ class TeacherDetailView(APIView):
 
 
 class CourseListView(APIView):
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAdminUser()]
+        return [IsAuthenticatedOrReadOnly()]
+
     def get(self, request):
         courses = Course.objects.all()
         serializer = CourseSerializer(courses, many=True)
@@ -176,7 +199,7 @@ class CourseListView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class CourseDetailView(APIView):
+class CourseDetailView(CatalogDetailView):
     def get_object(self, pk):
         try:
             return Course.objects.get(pk=pk)
