@@ -3,7 +3,6 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -13,6 +12,7 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
 )
+
 
 class RegisterView(APIView):
     authentication_classes = []
@@ -27,6 +27,7 @@ class RegisterView(APIView):
             )
         user = serializer.save()
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
 
 class LoginView(APIView):
     authentication_classes = []
@@ -44,20 +45,22 @@ class LoginView(APIView):
             username=serializer.validated_data["username"],
             password=serializer.validated_data["password"],
         )
-        
+
         if user is None:
             return Response(
                 {"error": "Невірний username або пароль."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-
         refresh = RefreshToken.for_user(user)
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": UserSerializer(user).data,
-        })
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserSerializer(user).data,
+            }
+        )
+
 
 class RefreshView(APIView):
     authentication_classes = []
@@ -74,10 +77,13 @@ class RefreshView(APIView):
             refresh = RefreshToken(serializer.validated_data["refresh"])
         except TokenError:
             return Response(
-                {"error": "Refresh токен недійсний або термін його дії закінчився. Увійдіть знову."},
+                {
+                    "error": "Refresh токен недійсний або термін його дії закінчився. Увійдіть знову."
+                },
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         return Response({"access": str(refresh.access_token)})
+
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
