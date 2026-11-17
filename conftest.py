@@ -7,13 +7,18 @@ from coursehub.models import Course, Faculty, Teacher
 
 PASSWORD = "StrongPass123!"
 
+
 @pytest.fixture
 def api_client() -> APIClient:
     return APIClient()
 
+
 @pytest.fixture
 def user() -> User:
-    return User.objects.create_user(username="student", email="student@example.com", password=PASSWORD)
+    return User.objects.create_user(
+        username="student", email="student@example.com", password=PASSWORD
+    )
+
 
 @pytest.fixture
 def staff_user() -> User:
@@ -24,23 +29,30 @@ def staff_user() -> User:
         is_staff=True,
     )
 
+
 def make_client(username: str) -> APIClient:
     client = APIClient()
-    response = client.post(reverse("login"), {"username": username, "password": PASSWORD}, format="json")
+    response = client.post(
+        reverse("login"), {"username": username, "password": PASSWORD}, format="json"
+    )
     client.credentials(HTTP_AUTHORIZATION="Bearer " + response.data["access"])
     return client
+
 
 @pytest.fixture
 def user_client(user) -> APIClient:
     return make_client(user.username)
 
+
 @pytest.fixture
 def staff_client(staff_user) -> APIClient:
     return make_client(staff_user.username)
 
+
 @pytest.fixture
 def faculty() -> Faculty:
     return Faculty.objects.create(name="ФСНСТ", description="Соціальні науки")
+
 
 @pytest.fixture
 def teacher(faculty) -> Teacher:
@@ -51,6 +63,7 @@ def teacher(faculty) -> Teacher:
         faculty=faculty,
     )
 
+
 @pytest.fixture
 def course(faculty, teacher) -> Course:
     return Course.objects.create(
@@ -60,6 +73,7 @@ def course(faculty, teacher) -> Course:
         faculty=faculty,
         teacher=teacher,
     )
+
 
 @pytest.fixture
 def course_data(faculty, teacher) -> dict:

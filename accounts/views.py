@@ -25,13 +25,20 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():
-            logger.warning("Невдала реєстрація: невалідні дані (поля: %s)", list(serializer.errors.keys()))
+            logger.warning(
+                "Невдала реєстрація: невалідні дані (поля: %s)",
+                list(serializer.errors.keys()),
+            )
             return Response(
                 {"error": "Передані невалідні дані.", "details": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         user = serializer.save()
-        logger.info("Зареєстровано нового користувача: username=%s (id=%s)", user.username, user.id)
+        logger.info(
+            "Зареєстровано нового користувача: username=%s (id=%s)",
+            user.username,
+            user.id,
+        )
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
@@ -62,7 +69,9 @@ class LoginView(APIView):
             )
 
         refresh = RefreshToken.for_user(user)
-        logger.info("Успішний вхід користувача: username=%s (id=%s)", user.username, user.id)
+        logger.info(
+            "Успішний вхід користувача: username=%s (id=%s)", user.username, user.id
+        )
         return Response(
             {
                 "access": str(refresh.access_token),
@@ -87,7 +96,9 @@ class RefreshView(APIView):
         try:
             refresh = RefreshToken(serializer.validated_data["refresh"])
         except TokenError:
-            logger.warning("Спроба оновити токен із недійсним або простроченим refresh-токеном")
+            logger.warning(
+                "Спроба оновити токен із недійсним або простроченим refresh-токеном"
+            )
             return Response(
                 {
                     "error": "Refresh токен недійсний або термін його дії закінчився. Увійдіть знову."
@@ -102,5 +113,7 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        logger.debug("Запит профілю поточного користувача: username=%s", request.user.username)
+        logger.debug(
+            "Запит профілю поточного користувача: username=%s", request.user.username
+        )
         return Response(UserSerializer(request.user).data)

@@ -1,16 +1,21 @@
 import logging
+
 from django.db.models import ProtectedError
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAdminUser,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from drf_spectacular.utils import OpenApiResponse, extend_schema
 
 from .models import Course, Faculty, Teacher
 from .serializers import CourseSerializer, FacultySerializer, TeacherSerializer
 
 logger = logging.getLogger(__name__)
+
 
 class CatalogDetailView(APIView):
     def get_permissions(self):
@@ -19,6 +24,7 @@ class CatalogDetailView(APIView):
         if self.request.method in ["PUT", "PATCH"]:
             return [IsAuthenticated()]
         return [IsAuthenticatedOrReadOnly()]
+
 
 class FacultyListView(APIView):
     def get_permissions(self):
@@ -45,8 +51,14 @@ class FacultyListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         faculty = serializer.save()
-        logger.info("Створено факультет id=%s '%s' (user=%s)", faculty.id, faculty.name, request.user.username)
+        logger.info(
+            "Створено факультет id=%s '%s' (user=%s)",
+            faculty.id,
+            faculty.name,
+            request.user.username,
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class FacultyDetailView(CatalogDetailView):
     def get_object(self, pk):
@@ -70,7 +82,11 @@ class FacultyDetailView(CatalogDetailView):
     def put(self, request, pk):
         faculty = self.get_object(pk)
         if not faculty:
-            logger.warning("Спроба оновити неіснуючий факультет id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба оновити неіснуючий факультет id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Факультет з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -96,7 +112,11 @@ class FacultyDetailView(CatalogDetailView):
     def delete(self, request, pk):
         faculty = self.get_object(pk)
         if not faculty:
-            logger.warning("Спроба видалити неіснуючий факультет id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба видалити неіснуючий факультет id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Факультет з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -149,7 +169,9 @@ class TeacherListView(APIView):
             )
 
         teacher = serializer.save()
-        logger.info("Створено викладача id=%s (user=%s)", teacher.id, request.user.username)
+        logger.info(
+            "Створено викладача id=%s (user=%s)", teacher.id, request.user.username
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -175,7 +197,11 @@ class TeacherDetailView(CatalogDetailView):
     def put(self, request, pk):
         teacher = self.get_object(pk)
         if not teacher:
-            logger.warning("Спроба оновити неіснуючого викладача id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба оновити неіснуючого викладача id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Викладача з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -201,7 +227,11 @@ class TeacherDetailView(CatalogDetailView):
     def delete(self, request, pk):
         teacher = self.get_object(pk)
         if not teacher:
-            logger.warning("Спроба видалити неіснуючого викладача id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба видалити неіснуючого викладача id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Викладача з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -226,6 +256,7 @@ class TeacherDetailView(CatalogDetailView):
 
         logger.info("Видалено викладача id=%s (user=%s)", pk, request.user.username)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class CourseListView(APIView):
     def get_permissions(self):
@@ -268,7 +299,12 @@ class CourseListView(APIView):
             )
 
         course = serializer.save()
-        logger.info("Створено курс id=%s '%s' (user=%s)", course.id, course.title, request.user.username)
+        logger.info(
+            "Створено курс id=%s '%s' (user=%s)",
+            course.id,
+            course.title,
+            request.user.username,
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -313,7 +349,11 @@ class CourseDetailView(CatalogDetailView):
     def put(self, request, pk):
         course = self.get_object(pk)
         if not course:
-            logger.warning("Спроба оновити неіснуючий курс id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба оновити неіснуючий курс id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Курс з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -342,14 +382,20 @@ class CourseDetailView(CatalogDetailView):
         responses={
             204: OpenApiResponse(description="Курс успішно видалено"),
             401: OpenApiResponse(description="Користувач не авторизований"),
-            403: OpenApiResponse(description="Недостатньо прав (потрібні права адміністратора)"),
+            403: OpenApiResponse(
+                description="Недостатньо прав (потрібні права адміністратора)"
+            ),
             404: OpenApiResponse(description="Курс з таким ID не знайдено"),
         },
     )
     def delete(self, request, pk):
         course = self.get_object(pk)
         if not course:
-            logger.warning("Спроба видалити неіснуючий курс id=%s (user=%s)", pk, request.user.username)
+            logger.warning(
+                "Спроба видалити неіснуючий курс id=%s (user=%s)",
+                pk,
+                request.user.username,
+            )
             return Response(
                 {"error": "Курс з таким ID не знайдено."},
                 status=status.HTTP_404_NOT_FOUND,
